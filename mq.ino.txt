@@ -1,0 +1,60 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <ESP32Servo.h>
+
+#define GAS_PIN 34
+#define BUZZER 23
+#define SERVO_PIN 18
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+Servo myServo;
+
+int gasThreshold = 1500;  // Adjust if needed
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(GAS_PIN, INPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  myServo.attach(SERVO_PIN);
+  myServo.write(0); // Gas ON position
+
+  lcd.init();
+  lcd.backlight();
+  
+  lcd.setCursor(0,0);
+  lcd.print("Gas Safety Sys");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+
+  int gasValue = analogRead(GAS_PIN);
+  Serial.print("Gas Value: ");
+  Serial.println(gasValue);
+
+  if (gasValue > gasThreshold) {
+
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("!!! GAS LEAK !!!");
+    lcd.setCursor(0,1);
+    lcd.print("Gas OFF");
+
+    digitalWrite(BUZZER, HIGH);
+    myServo.write(90);  // Turn regulator OFF
+
+  } else {
+
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("System Safe");
+
+    digitalWrite(BUZZER, LOW);
+    myServo.write(0);   // Normal position
+  }
+
+  delay(500);
+}
